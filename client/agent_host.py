@@ -2,14 +2,14 @@ import asyncio
 import json
 from typing import Any
 
-import ollama
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
 from app.config import get_settings
+from client.llm.factory import create_llm_provider
 
 
-def mcp_tool_to_ollama_tool(tool: Any) -> dict[str, Any]:
+def mcp_tool_to_llm_tool(tool: Any) -> dict[str, Any]:
     input_schema = getattr(tool, "inputSchema", None) or {}
 
     if not isinstance(input_schema, dict):
@@ -41,6 +41,28 @@ def extract_text_from_tool_result(result: Any) -> str:
     return "\n".join(output_parts) if output_parts else "No tool output."
 
 
+def get_tool_calls(message: dict[str, Any]) -> list[dict[str, Any]]:
+    tool_calls = message.get("tool_calls", [])
+    return tool_calls or []
+
+
+def get_tool_name_and_arguments(tool_call: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
+    function_data = tool_call.get("function", {})
+    tool_name = function_data.get("name")
+    arguments = function_data.get("arguments", {}) or {}
+
+    if isinstance(arguments, str):
+        try:
+            arguments = json.loads(arguments)
+        except json.JSONDecodeError:
+            arguments = {}
+
+    if not isinstance(arguments, dict):
+        arguments = {}
+
+    return tool_name, arguments
+
+
 async def call_mcp_tool(
     session: ClientSession,
     tool_name: str,
@@ -52,6 +74,8 @@ async def call_mcp_tool(
 
 async def chat_once(user_message: str) -> str:
     settings = get_settings()
+    llm = create_llm_provider()
+
     mcp_url = f"http://{settings.mcp_server_host}:{settings.mcp_server_port}/mcp"
 
     async with streamable_http_client(mcp_url) as (read, write, _):
@@ -60,11 +84,7 @@ async def chat_once(user_message: str) -> str:
 
             tools_result = await session.list_tools()
             mcp_tools = tools_result.tools
-            ollama_tools = [mcp_tool_to_ollama_tool(tool) for tool in mcp_tools]
-
-            print("Available MCP tools:")
-            for tool in mcp_tools:
-                print(f"- {tool.name}")
+            llm_tools = [mcp_tool_to_llm_tool(tool) for tool in mcp_tools]
 
             messages: list[dict[str, Any]] = [
                 {
@@ -86,30 +106,21 @@ async def chat_once(user_message: str) -> str:
                 },
             ]
 
-            first_response = ollama.chat(
-                model=settings.ollama_model,
+            first_response = llm.chat(
                 messages=messages,
-                tools=ollama_tools,
+                tools=llm_tools,
             )
 
             assistant_message = first_response["message"]
             messages.append(assistant_message)
 
-            tool_calls = assistant_message.get("tool_calls", [])
+            tool_calls = get_tool_calls(assistant_message)
 
             if not tool_calls:
                 return assistant_message.get("content", "")
 
             for tool_call in tool_calls:
-                function_data = tool_call.get("function", {})
-                tool_name = function_data.get("name")
-                arguments = function_data.get("arguments", {}) or {}
-
-                if isinstance(arguments, str):
-                    try:
-                        arguments = json.loads(arguments)
-                    except json.JSONDecodeError:
-                        arguments = {}
+                tool_name, arguments = get_tool_name_and_arguments(tool_call)
 
                 if not tool_name:
                     continue
@@ -129,10 +140,7 @@ async def chat_once(user_message: str) -> str:
                     }
                 )
 
-            final_response = ollama.chat(
-                model=settings.ollama_model,
-                messages=messages,
-            )
+            final_response = llm.chat(messages=messages)
 
             return final_response["message"].get("content", "")
 
@@ -140,8 +148,11 @@ async def chat_once(user_message: str) -> str:
 async def interactive_chat() -> None:
     settings = get_settings()
 
-    print("SupportOps Ollama Host")
-    print(f"Model: {settings.ollama_model}")
+    print("SupportOps Agent Host")
+    print(f"LLM provider: {settings.llm_provider}")
+    print(f"Ollama mode: {settings.ollama_mode}")
+    print(f"Ollama base URL: {settings.ollama_base_url}")
+    print(f"Ollama model: {settings.ollama_model}")
     print(f"MCP Server: http://{settings.mcp_server_host}:{settings.mcp_server_port}/mcp")
     print("Type 'exit' to quit.")
     print()
