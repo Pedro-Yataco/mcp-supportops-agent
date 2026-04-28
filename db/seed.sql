@@ -74,3 +74,14 @@ INSERT INTO ticket_comments (ticket_id, author_user_id, comment, is_internal) VA
 (1, 1, 'Initial investigation started. API gateway logs show elevated 5xx errors.', TRUE),
 (2, 1, 'Auth service latency increased around 10:00 UTC.', TRUE),
 (3, 2, 'May require coordination with billing integration team.', TRUE);
+
+-- Adjust ticket timestamps to make SLA risk detection reproducible in local development.
+UPDATE tickets
+SET created_at = DATE_SUB(NOW(), INTERVAL 10 HOUR),
+    updated_at = DATE_SUB(NOW(), INTERVAL 10 HOUR)
+WHERE id = 1;
+
+UPDATE tickets
+SET created_at = DATE_SUB(NOW(), INTERVAL 20 HOUR),
+    updated_at = DATE_SUB(NOW(), INTERVAL 20 HOUR)
+WHERE id = 3;
