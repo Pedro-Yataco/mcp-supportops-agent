@@ -22,6 +22,8 @@ class Settings(BaseSettings):
 
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:7b"
+    
+    current_user_id: int = 1
 
     model_config = SettingsConfigDict(
         env_file=".env",
