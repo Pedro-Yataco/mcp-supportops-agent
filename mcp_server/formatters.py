@@ -32,3 +32,20 @@ def format_customer_list(customers: list[dict]) -> str:
         )
 
     return "\n".join(lines)
+
+
+def format_sla_risk_report(items: list[dict]) -> str:
+    if not items:
+        return "No open or in-progress tickets found for SLA risk analysis."
+
+    lines = ["SLA Risk Report:"]
+
+    for item in items:
+        lines.append(
+            f"- Ticket #{item['ticket_id']} | {item['sla_status'].upper()} | "
+            f"{item['priority']} | {item['customer_name']} | "
+            f"age={item['age_hours']}h / resolution_sla={item['resolution_time_hours']}h | "
+            f"{item['title']}"
+        )
+
+    return "\n".join(lines)

@@ -87,3 +87,9 @@ def get_customer_sla(customer_id: int) -> Any:
     with httpx.Client(timeout=10.0) as client:
         response = client.get(f"{_base_url()}/customers/{customer_id}/sla")
         return _handle_response(response)
+
+
+def detect_open_ticket_sla_risk() -> Any:
+    with httpx.Client(timeout=10.0) as client:
+        response = client.get(f"{_base_url()}/tickets/sla-risk/open")
+        return _handle_response(response)

@@ -61,6 +61,50 @@ def list_tickets(
         return cursor.fetchall()
 
 
+@router.get("/sla-risk/open")
+def detect_open_ticket_sla_risk() -> list[dict]:
+    with get_db_cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                t.id AS ticket_id,
+                t.title,
+                t.priority,
+                t.status,
+                t.created_at,
+                c.id AS customer_id,
+                c.name AS customer_name,
+                cs.resolution_time_hours,
+                TIMESTAMPDIFF(HOUR, t.created_at, NOW()) AS age_hours,
+                CASE
+                    WHEN TIMESTAMPDIFF(HOUR, t.created_at, NOW()) >= cs.resolution_time_hours
+                        THEN 'breached'
+                    WHEN TIMESTAMPDIFF(HOUR, t.created_at, NOW()) >= cs.resolution_time_hours * 0.75
+                        THEN 'at_risk'
+                    ELSE 'healthy'
+                END AS sla_status
+            FROM tickets t
+            JOIN customers c ON c.id = t.customer_id
+            JOIN customer_slas cs
+                ON cs.customer_id = t.customer_id
+               AND cs.priority = t.priority
+            WHERE t.status IN ('open', 'in_progress')
+            ORDER BY
+                CASE
+                    WHEN TIMESTAMPDIFF(HOUR, t.created_at, NOW()) >= cs.resolution_time_hours
+                        THEN 1
+                    WHEN TIMESTAMPDIFF(HOUR, t.created_at, NOW()) >= cs.resolution_time_hours * 0.75
+                        THEN 2
+                    ELSE 3
+                END,
+                t.priority ASC,
+                t.created_at ASC
+            """
+        )
+
+        return cursor.fetchall()
+
+
 @router.get("/{ticket_id}", response_model=TicketResponse)
 def get_ticket(ticket_id: int) -> dict:
     with get_db_cursor() as cursor:

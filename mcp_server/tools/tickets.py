@@ -1,5 +1,9 @@
 from mcp_server import internal_api_client
-from mcp_server.formatters import format_ticket_list, to_pretty_json
+from mcp_server.formatters import (
+    format_sla_risk_report,
+    format_ticket_list,
+    to_pretty_json,
+)
 from mcp_server.security.context import get_current_user_context
 from mcp_server.security.permissions import require_permission
 
@@ -75,3 +79,15 @@ def register_ticket_tools(mcp):
                 },
             }
         )
+    
+    @mcp.tool()
+    def detect_sla_risk() -> str:
+        """Detect open or in-progress tickets that are at risk of breaching SLA.
+
+        Requires manager-level permission.
+        """
+        user = get_current_user_context()
+        require_permission(user, "sla.risk.detect")
+
+        risk_items = internal_api_client.detect_open_ticket_sla_risk()
+        return format_sla_risk_report(risk_items)
