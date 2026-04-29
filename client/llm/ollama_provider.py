@@ -12,33 +12,33 @@ class OllamaProvider(LLMProvider):
     def __init__(self) -> None:
         settings = get_settings()
 
-        self.mode = settings.ollama_mode.lower().strip()
+        self.mode = settings.ol_mode.lower().strip()
         self.base_url = settings.ollama_base_url.rstrip("/")
         self.model = settings.ollama_model
-        self.api_key = settings.ollama_api_key.strip()
+        self.api_key = settings.ol_api_key.strip()
 
         if self.mode not in {"local", "cloud"}:
             raise ValueError(
-                f"Invalid OLLAMA_MODE='{self.mode}'. "
+                f"Invalid OL_MODE='{self.mode}'. "
                 "Expected 'local' or 'cloud'."
             )
 
         if self.mode == "local" and "ollama.com" in self.base_url:
             raise ValueError(
-                "Invalid config: OLLAMA_MODE=local cannot use ollama.com. "
-                "Check OLLAMA_LOCAL_BASE_URL."
+                "Invalid config: OL_MODE=local cannot use ollama.com. "
+                "Check OL_LOCAL_BASE_URL."
             )
 
         if self.mode == "cloud":
             if "localhost" in self.base_url or "127.0.0.1" in self.base_url:
                 raise ValueError(
-                    "Invalid config: OLLAMA_MODE=cloud cannot use localhost. "
-                    "Check OLLAMA_CLOUD_BASE_URL."
+                    "Invalid config: OL_MODE=cloud cannot use localhost. "
+                    "Check OL_CLOUD_BASE_URL."
                 )
 
             if not self.api_key:
                 raise ValueError(
-                    "OLLAMA_API_KEY is required when OLLAMA_MODE=cloud."
+                    "OL_API_KEY is required when OL_MODE=cloud."
                 )
 
         headers: dict[str, str] = {}

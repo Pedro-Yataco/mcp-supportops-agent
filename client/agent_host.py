@@ -150,7 +150,7 @@ async def interactive_chat() -> None:
 
     print("SupportOps Agent Host")
     print(f"LLM provider: {settings.llm_provider}")
-    print(f"Ollama mode: {settings.ollama_mode}")
+    print(f"Ollama mode: {settings.ol_mode}")
     print(f"Ollama base URL: {settings.ollama_base_url}")
     print(f"Ollama model: {settings.ollama_model}")
     print(f"MCP Server: http://{settings.mcp_server_host}:{settings.mcp_server_port}/mcp")

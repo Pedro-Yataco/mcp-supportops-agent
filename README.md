@@ -83,8 +83,6 @@ El proyecto usa un enfoque RBAC básico a nivel de tools MCP:
 - Cada tool valida permisos explícitos (ej. `tickets.read`, `customers.read`, `sla.read`, `tickets.comment.internal`, `sla.risk.detect`).
 - Si un permiso falla, la tool no ejecuta la acción sobre datos.
 
-> Nota: el roadmap contempla ampliar seguridad con auditoría y masking.
-
 ## Configuración
 
 La configuración se centraliza en `app/config.py` y se alimenta desde `.env` (ver `.env.example`).
@@ -94,5 +92,5 @@ Variables relevantes:
 - API interna: `INTERNAL_API_BASE_URL`.
 - MCP server: `MCP_SERVER_HOST`, `MCP_SERVER_PORT`.
 - Usuario simulado: `CURRENT_USER_ID`.
-- LLM/Ollama: `LLM_PROVIDER`, `OLLAMA_MODE`, URLs/modelos local y cloud.
+- LLM/Ollama: `LLM_PROVIDER`, `OL_MODE`, URLs/modelos local y cloud.
 

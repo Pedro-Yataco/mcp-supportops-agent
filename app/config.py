@@ -27,14 +27,14 @@ class Settings(BaseSettings):
 
     llm_provider: str = "ollama"
 
-    ollama_mode: str = "local"
+    ol_mode: str = "local"
 
-    ollama_local_base_url: str = "http://localhost:11434"
-    ollama_local_model: str = "qwen2.5:7b"
+    ol_local_base_url: str = "http://localhost:11434"
+    ol_local_model: str = "qwen2.5:7b"
 
-    ollama_cloud_base_url: str = "https://ollama.com"
-    ollama_cloud_model: str = "qwen3.5:397b-cloud"
-    ollama_api_key: str = ""
+    ol_cloud_base_url: str = "https://ollama.com"
+    ol_cloud_model: str = "qwen3.5:397b-cloud"
+    ol_api_key: str = ""
 
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),
@@ -44,27 +44,27 @@ class Settings(BaseSettings):
 
     @property
     def ollama_base_url(self) -> str:
-        if self.ollama_mode == "local":
-            return self.ollama_local_base_url
+        if self.ol_mode == "local":
+            return self.ol_local_base_url
 
-        if self.ollama_mode == "cloud":
-            return self.ollama_cloud_base_url
+        if self.ol_mode == "cloud":
+            return self.ol_cloud_base_url
 
         raise ValueError(
-            f"Invalid OLLAMA_MODE='{self.ollama_mode}'. "
+            f"Invalid OL_MODE='{self.ol_mode}'. "
             "Expected 'local' or 'cloud'."
         )
 
     @property
     def ollama_model(self) -> str:
-        if self.ollama_mode == "local":
-            return self.ollama_local_model
+        if self.ol_mode == "local":
+            return self.ol_local_model
 
-        if self.ollama_mode == "cloud":
-            return self.ollama_cloud_model
+        if self.ol_mode == "cloud":
+            return self.ol_cloud_model
 
         raise ValueError(
-            f"Invalid OLLAMA_MODE='{self.ollama_mode}'. "
+            f"Invalid OL_MODE='{self.ol_mode}'. "
             "Expected 'local' or 'cloud'."
         )
 
